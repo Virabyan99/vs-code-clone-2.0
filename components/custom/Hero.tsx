@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 const Hero = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [code, setCode] = useState<string>("// Write JavaScript here...");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // 🔴 New state for error message
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // 🔥 Added Loading State
 
   useEffect(() => {
     const savedCode = localStorage.getItem("editorCode");
@@ -17,18 +18,19 @@ const Hero = () => {
 
   const executeCode = () => {
     setLogs([]);
-    setErrorMessage(null); // Reset error message on new execution
+    setErrorMessage(null);
+    setIsLoading(true); // Start loading when execution begins
 
     const worker = new Worker(new URL("../../public/worker.ts", import.meta.url), { type: "module" });
 
     worker.onmessage = (event: MessageEvent<string[]>) => {
       const outputLogs = event.data;
       setLogs(outputLogs);
+      setIsLoading(false); // Stop loading when execution finishes
 
-      // Check if there's an infinite loop error message
       const loopError = outputLogs.find((log) => log.includes("Execution timed out") || log.includes("Detected infinite loop"));
       if (loopError) {
-        setErrorMessage(loopError); // Show the modal with error
+        setErrorMessage(loopError);
       }
 
       worker.terminate();
@@ -36,7 +38,8 @@ const Hero = () => {
 
     worker.onerror = (error: ErrorEvent) => {
       setLogs(["Error: " + error.message]);
-      setErrorMessage("Unexpected Error: " + error.message); // Show modal for unexpected errors
+      setErrorMessage("Unexpected Error: " + error.message);
+      setIsLoading(false); // Stop loading if there's an error
       worker.terminate();
     };
 
@@ -49,12 +52,12 @@ const Hero = () => {
 
   return (
     <>
-      <div className="flex gap-4 p-4 h-screen">
-        <div className="flex-1">
+      <div className="flex flex-col md:flex-row gap-4 p-4 h-screen">
+        <div className="flex-1 min-h-[300px]">
           <Editor code={code} setCode={setCode} />
         </div>
-        <div className="flex-1">
-          <Output logs={logs} onRun={executeCode} onClear={clearConsole} />
+        <div className="flex-1 min-h-[300px]">
+          <Output logs={logs} onRun={executeCode} onClear={clearConsole} isLoading={isLoading} />
         </div>
       </div>
 
