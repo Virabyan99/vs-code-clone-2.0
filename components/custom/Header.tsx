@@ -4,6 +4,11 @@ import Link from 'next/link';
 import { Blocks, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import AuthModal from './AuthModal';
+
+
+ 
+
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState<boolean>(true);
@@ -43,7 +48,7 @@ const Header = () => {
             </span>
           </div>
         </Link>
-
+        
         {/* 🔆 Dark Mode Toggle Button */}
         <Button onClick={toggleTheme} variant="outline" size="sm" className='bg-slate-600'>
           {darkMode ? <Sun className="w-5 h-5 text-white" /> : <Moon className="  w-5 h-5 text-white" />}
