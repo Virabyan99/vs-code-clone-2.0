@@ -1,20 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react"; // Import the hook
 import Editor from "@/components/custom/Editor";
 import Output from "@/components/custom/Output";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Hero = () => {
+  const { data: session, status } = useSession(); // Use the session hook to access session data
   const [logs, setLogs] = useState<string[]>([]);
   const [code, setCode] = useState<string>("// Write JavaScript here...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false); // 🔥 Added Loading State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Added state for authentication
 
   useEffect(() => {
     const savedCode = localStorage.getItem("editorCode");
     if (savedCode) setCode(savedCode);
-  }, []);
+
+    // Check user authentication status after component mounts
+    if (session?.user) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, [session]); // Dependency array ensures this effect runs when session changes
 
   const executeCode = () => {
     setLogs([]);
@@ -54,7 +64,8 @@ const Hero = () => {
     <>
       <div className="flex flex-col md:flex-row gap-4 p-4 h-screen">
         <div className="flex-1 min-h-[300px]">
-          <Editor code={code} setCode={setCode} />
+          {/* Pass isAuthenticated to Editor to control readOnly */}
+          <Editor key={isAuthenticated.toString()} code={code} setCode={setCode} isAuthenticated={isAuthenticated} />
         </div>
         <div className="flex-1 min-h-[300px]">
           <Output logs={logs} onRun={executeCode} onClear={clearConsole} isLoading={isLoading} />
